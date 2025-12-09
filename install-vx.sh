@@ -137,15 +137,15 @@ identify_the_operating_system_and_architecture() {
     MACHINE='amd64'
     ;;
   'armv5tel')
-    MACHINE='arm32-v5'
+    MACHINE='armv5'
     ;;
   'armv6l')
-    MACHINE='arm32-v6'
-    grep Features /proc/cpuinfo | grep -qw 'vfp' || MACHINE='arm32-v5'
+    MACHINE='armv6'
+    grep Features /proc/cpuinfo | grep -qw 'vfp' || MACHINE='armv5'
     ;;
   'armv7' | 'armv7l')
-    MACHINE='arm32-v7a'
-    grep Features /proc/cpuinfo | grep -qw 'vfp' || MACHINE='arm32-v5'
+    MACHINE='armv7'
+    grep Features /proc/cpuinfo | grep -qw 'vfp' || MACHINE='armv5'
     ;;
   'armv8' | 'aarch64')
     MACHINE='arm64'
@@ -362,7 +362,7 @@ install_software() {
 get_current_version() {
   # Get the CURRENT_VERSION
   if [[ -f '/usr/local/bin/vx' ]]; then
-    CURRENT_VERSION="$(/usr/local/bin/vx -version | awk 'NR==1 {print $2}')"
+    CURRENT_VERSION="$(/usr/local/bin/vx --version | awk 'NR==1 {print $2}')"
     CURRENT_VERSION="v${CURRENT_VERSION#v}"
   else
     CURRENT_VERSION=""
@@ -439,20 +439,20 @@ download_vx() {
     echo 'error: Download failed! Please check your network or try again.'
     return 1
   fi
-  echo "Downloading verification file for vx archive: ${DOWNLOAD_LINK}.dgst"
-  if curl -f -x "${PROXY}" -sSR -H 'Cache-Control: no-cache' -o "${ZIP_FILE}.dgst" "${DOWNLOAD_LINK}.dgst"; then
+  echo "Downloading verification file for vx archive: ${DOWNLOAD_LINK}.sha256"
+  if curl -f -x "${PROXY}" -sSR -H 'Cache-Control: no-cache' -o "${ZIP_FILE}.sha256" "${DOWNLOAD_LINK}.sha256"; then
     echo "ok."
   else
     echo 'error: Download failed! Please check your network or try again.'
     return 1
   fi
-  if grep 'Not Found' "${ZIP_FILE}.dgst"; then
+  if grep 'Not Found' "${ZIP_FILE}.sha256"; then
     echo 'error: This version does not support verification. Please replace with another version.'
     return 1
   fi
 
   # Verification of vx archive
-  CHECKSUM=$(awk -F '= ' '/256=/ {print $2}' "${ZIP_FILE}.dgst")
+  CHECKSUM=$(cat "${ZIP_FILE}.sha256" | tr -d '[:space:]')
   LOCALSUM=$(sha256sum "$ZIP_FILE" | awk '{printf $1}')
   if [[ "$CHECKSUM" != "$LOCALSUM" ]]; then
     echo 'error: SHA256 check failed! Please check your network or try again.'
