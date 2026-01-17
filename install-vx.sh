@@ -362,7 +362,7 @@ install_software() {
 get_current_version() {
   # Get the CURRENT_VERSION
   if [[ -f '/usr/local/bin/vx' ]]; then
-    CURRENT_VERSION="$(/usr/local/bin/vx --version | awk 'NR==1 {print $2}')"
+    CURRENT_VERSION="$(/usr/local/bin/vx --version | awk 'NR==1 {print $3}')"
     CURRENT_VERSION="v${CURRENT_VERSION#v}"
   else
     CURRENT_VERSION=""
